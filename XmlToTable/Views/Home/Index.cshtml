@@ -1,4 +1,173 @@
-﻿@using POS_API.Model
+﻿@* @using POS_API.Model *@
+@* @model List<ParsedElement> *@
+
+@* <!DOCTYPE html> *@
+@* <html lang="en"> *@
+@* <head> *@
+@*     <meta charset="UTF-8"> *@
+@*     <meta name="viewport" content="width=device-width, initial-scale=1.0"> *@
+@*     <title>POS Documentation</title> *@
+
+@*     <!-- DataTables CSS --> *@
+@*     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"> *@
+@*     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css"> *@
+
+@*     <style> *@
+@*         .parent-row { *@
+@*             cursor: pointer; *@
+@*             font-weight: bold; *@
+@*         } *@
+
+@*         .child-row { *@
+@*             display: none; *@
+@*             background-color: #f9f9f9; *@
+@*         } *@
+
+@*             .child-row td { *@
+@*                 padding-left: 30px; *@
+@*             } *@
+
+@*         .expand-icon { *@
+@*             margin-right: 5px; *@
+@*             cursor: pointer; *@
+@*         } *@
+
+@*         .button-group { *@
+@*             display: flex; *@
+@*             justify-content: center; *@
+@*             margin-bottom: 20px; *@
+@*         } *@
+
+@*             .button-group button { *@
+@*                 padding: 10px 20px; *@
+@*                 margin: 0 10px; *@
+@*                 background-color: #007bff; *@
+@*                 color: white; *@
+@*                 border: none; *@
+@*                 border-radius: 4px; *@
+@*                 cursor: pointer; *@
+@*                 font-size: 16px; *@
+@*                 transition: background-color 0.3s ease; *@
+@*             } *@
+
+@*                 .button-group button:hover { *@
+@*                     background-color: #0056b3; *@
+@*                 } *@
+@*     </style> *@
+@* </head> *@
+@* <body> *@
+@*     <div class="container"> *@
+@*         <h1>POS Documentation</h1> *@
+
+@*         <!-- Buttons --> *@
+@*         <div class="button-group"> *@
+@*             <button onclick="loadData('https://receiptservice.egretail.cloud/ARTSPOSLogSchema/2.2.1', 'ReceiptARTSPOSLog')">ReceiptARTSPOSLog</button> *@
+@*             <button onclick="loadData('https://receiptservice.egretail.cloud/ARTSPOSLogSchema/6.0.0', 'ReceiptARTSPOSLogVersion6')">ReceiptARTSPOSLogVersion6</button> *@
+@*         </div> *@
+
+@*         <!-- Dynamic Table --> *@
+@*         <table id="parsedTable" class="display" style="width:100%"> *@
+@*             <thead> *@
+@*                 <tr> *@
+@*                     <th>Element Name</th> *@
+@*                     <th>Description</th> *@
+@*                 </tr> *@
+@*             </thead> *@
+@*             <tbody> *@
+@*                 @foreach (var parent in Model) *@
+@*                 { *@
+@*                     <tr class="parent-row" data-id="@parent.ElementName"> *@
+@*                         <td> *@
+@*                             @if (parent.Children != null && parent.Children.Count > 0) *@
+@*                             { *@
+@*                                 <span class="expand-icon">↑</span> *@
+@*                             } *@
+@*                             @parent.ElementName *@
+@*                         </td> *@
+@*                         <td>@parent.Description</td> *@
+@*                     </tr> *@
+@*                 } *@
+@*             </tbody> *@
+@*         </table> *@
+@*     </div> *@
+
+@*     <!-- Include jQuery --> *@
+@*     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+@*     <!-- Include DataTables JS --> *@
+@*     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> *@
+
+@*     <script> *@
+@*         $(document).ready(function () { *@
+@*             // Initialize DataTable *@
+@*             var table = $('#parsedTable').DataTable({ *@
+@*                 paging: false, *@
+@*                 searching: true, *@
+@*                 ordering: true *@
+@*             }); *@
+
+@*             // Handle expand/collapse of child rows *@
+@*             $('.parent-row').click(function () { *@
+@*                 const parentRow = $(this); *@
+@*                 const parentId = parentRow.data('id'); *@
+@*                 const expandIcon = parentRow.find('.expand-icon'); *@
+
+@*                 // Check if child rows are already added *@
+@*                 if (parentRow.next().hasClass('child-row')) { *@
+@*                     // Toggle visibility of child rows *@
+@*                     parentRow.nextUntil('.parent-row').toggle(); *@
+@*                     expandIcon.text(expandIcon.text() === '↑' ? '↓' : '↑'); // Toggle arrows *@
+@*                 } else { *@
+@*                     // Find children for this parent *@
+@*                     const children = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model)) *@
+@*                         .find(p => p.ElementName === parentId)?.Children || []; *@
+
+@*                     // Insert child rows directly below the parent row *@
+@*                     children.forEach(child => { *@
+@*                         const childRow = ` *@
+@*                             <tr class="child-row"> *@
+@*                                 <td>${child.ElementName}</td> *@
+@*                                 <td>${child.Description || 'N/A'}</td> *@
+@*                             </tr>`; *@
+@*                         parentRow.after(childRow); *@
+@*                     }); *@
+
+@*                     // Show the newly added rows and set the arrow to down *@
+@*                     parentRow.nextUntil('.parent-row').show(); *@
+@*                     expandIcon.text('↓'); *@
+@*                 } *@
+@*             }); *@
+
+@*             // Hide all child rows by default *@
+@*             $('.child-row').hide(); *@
+
+@*             // Ensure that search works for child rows as well by displaying them temporarily for searching *@
+@*             table.on('search.dt', function() { *@
+@*                 var searchValue = table.search(); *@
+@*                 if (searchValue) { *@
+@*                     // Show all child rows temporarily during search *@
+@*                     $('.child-row').show(); *@
+@*                 } else { *@
+@*                     // Hide all child rows again when search is cleared *@
+@*                     $('.child-row').hide(); *@
+@*                 } *@
+@*             }); *@
+@*         }); *@
+
+@*         // Function to load data for different APIs *@
+@*         function loadData(url, buttonName) { *@
+@*             // Store the selected button name in localStorage *@
+@*             localStorage.setItem('selectedButton', buttonName); *@
+
+@*             // Load the data from the API by navigating to the controller endpoint *@
+@*             const queryParam = new URLSearchParams({ url }); *@
+@*             window.location.href = `/Home/Index?${queryParam}`; *@
+@*         } *@
+@*     </script> *@
+@* </body> *@
+@* </html> *@
+
+
+@using POS_API.Model
 @model List<ParsedElement>
 
 <!DOCTYPE html>
@@ -13,33 +182,23 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f8f9fa;
-            color: #343a40;
+        .parent-row {
+            cursor: pointer;
+            font-weight: bold;
         }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #007bff;
+        .child-row {
+            display: none;
+            background-color: #f9f9f9;
         }
 
-        #selectedButtonMessage {
-            text-align: center;
-            font-size: 18px;
-            color: #343a40;
-            margin-bottom: 20px;
-        }
+            .child-row td {
+                padding-left: 30px;
+            }
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .expand-icon {
+            margin-right: 5px;
+            cursor: pointer;
         }
 
         .button-group {
@@ -63,37 +222,20 @@
                 .button-group button:hover {
                     background-color: #0056b3;
                 }
-
-        table.dataTable thead th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        table.dataTable tbody tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        table.dataTable tbody tr:hover {
-            background-color: #e8f0fe;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>POS Documentation</h1>
 
-        <!-- Selected Button Message -->
-        <div id="selectedButtonMessage">Please select a button to view its data.</div>
-
         <!-- Buttons -->
         <div class="button-group">
             <button onclick="loadData('https://receiptservice.egretail.cloud/ARTSPOSLogSchema/2.2.1', 'ReceiptARTSPOSLog')">ReceiptARTSPOSLog</button>
             <button onclick="loadData('https://receiptservice.egretail.cloud/ARTSPOSLogSchema/6.0.0', 'ReceiptARTSPOSLogVersion6')">ReceiptARTSPOSLogVersion6</button>
         </div>
-       
 
         <!-- Dynamic Table -->
-        <table id="parsedTable" class="display nowrap" style="width:100%">
+        <table id="parsedTable" class="display" style="width:100%">
             <thead>
                 <tr>
                     <th>Element Name</th>
@@ -101,12 +243,26 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var element in Model)
+                @foreach (var parent in Model)
                 {
-                    <tr>
-                        <td>@element.ElementName</td>
-                        <td>@element.Description</td>
+                    <tr class="parent-row" data-id="@parent.ElementName">
+                        <td>
+                            @if (parent.Children != null && parent.Children.Count > 0)
+                            {
+                                <span class="expand-icon">↑</span>
+                            }
+                            @parent.ElementName
+                        </td>
+                        <td>@parent.Description</td>
                     </tr>
+
+                    @foreach (var child in parent.Children)
+                    {
+                        <tr class="child-row">
+                            <td>@child.ElementName</td>
+                            <td>@child.Description</td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
@@ -116,44 +272,71 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Include DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script>
         $(document).ready(function () {
-            // Initialize DataTables without responsive feature
-            $('#parsedTable').DataTable({
-                responsive: false,  // Disable the responsive feature to keep the rows visible
-                paging: true,
+            // Initialize DataTable
+            var table = $('#parsedTable').DataTable({
+                paging: false,
                 searching: true,
                 ordering: true,
-                language: {
-                    search: "Search:",
-                    lengthMenu: "Display _MENU_ records per page",
-                    info: "Showing _START_ to _END_ of _TOTAL_ records",
-                    paginate: {
-                        previous: "Previous",
-                        next: "Next"
-                    }
-                },
-                order: [[0, 'asc']] // Default sorting on the first column
+                search: {
+                    caseInsensitive: true
+                }
             });
 
-            // If there's a stored button name, update the message
-            const selectedButton = localStorage.getItem('selectedButton');
-            if (selectedButton) {
-                document.getElementById('selectedButtonMessage').innerText = `Selected Button: ${selectedButton}`;
-            }
+            // Handle expand/collapse of child rows
+            $('.parent-row').click(function () {
+                const parentRow = $(this);
+                const parentId = parentRow.data('id');
+                const expandIcon = parentRow.find('.expand-icon');
+
+                // Check if child rows are already added
+                if (parentRow.next().hasClass('child-row')) {
+                    // Toggle visibility of child rows
+                    parentRow.nextUntil('.parent-row').toggle();
+                    expandIcon.text(expandIcon.text() === '↑' ? '↓' : '↑'); // Toggle arrows
+                } else {
+                    // Find children for this parent
+                    const children = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))
+                        .find(p => p.ElementName === parentId)?.Children || [];
+
+                    // Insert child rows directly below the parent row
+                    children.forEach(child => {
+                        const childRow = `
+                            <tr class="child-row">
+                                <td>${child.ElementName}</td>
+                                <td>${child.Description || 'N/A'}</td>
+                            </tr>`;
+                        parentRow.after(childRow);
+                    });
+
+                    // Show the newly added rows and set the arrow to down
+                    parentRow.nextUntil('.parent-row').show();
+                    expandIcon.text('↓');
+                }
+            });
+
+            // Hide all child rows by default
+            $('.child-row').hide();
+
+            // Refresh the page when the search box is cleared
+            table.on('search.dt', function () {
+                if (table.search() === '') {
+                    location.reload(); // Refresh the page when the search box is empty
+                } else {
+                    // Ensure child rows are shown during search
+                    $('.child-row').show();
+                }
+            });
         });
 
-        // Function to load data for different URLs and update the message
+        // Function to load data for different APIs
         function loadData(url, buttonName) {
-            // Update the message below the heading
-            document.getElementById('selectedButtonMessage').innerText = `Selected Button: ${buttonName}`;
-
             // Store the selected button name in localStorage
             localStorage.setItem('selectedButton', buttonName);
 
-            // Load the data (example functionality, adapt as needed)
+            // Load the data from the API by navigating to the controller endpoint
             const queryParam = new URLSearchParams({ url });
             window.location.href = `/Home/Index?${queryParam}`;
         }

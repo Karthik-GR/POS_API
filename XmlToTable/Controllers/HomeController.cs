@@ -15,7 +15,7 @@ namespace XmlToTable.Controllers
         public async Task<IActionResult> Index(string url)
         {
             // Default URL if none is passed
-            url ??= "https://receiptservice.egretail.cloud/ARTSPOSLogSchema/2.2.1";
+            url ??= "https://receiptservice.egretail.cloud/ARTSPOSLogSchema/6.0.0";
 
             var parsedElements = await _xmlParserService.ParseXmlAsync(url);
             return View(parsedElements);
